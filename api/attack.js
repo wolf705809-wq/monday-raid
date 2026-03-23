@@ -1,20 +1,23 @@
-// api/attack.js
+// 파일 위치: api/attack.js
+
 export default async function handler(req, res) {
-    // POST 요청만 허용
+    // 1. POST 요청만 받음
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ error: 'POST 요청만 허용됩니다.' });
     }
 
+    // 2. 프론트엔드에서 보낸 스킬 이름 받기
     const { skillName } = req.body;
     
-    // Vercel 환경 변수에서 API 키를 가져옵음 (코드에 직접 노출 안 됨!)
+    // 3. Vercel 환경 변수에서 API 키 가져오기 (코드에 노출 안 됨!)
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
 
     if (!GEMINI_API_KEY) {
-        return res.status(500).json({ error: 'API 키가 설정되지 않았습니다.' });
+        return res.status(500).json({ error: '서버에 API 키가 설정되지 않았습니다.' });
     }
 
     try {
+        // 4. Gemini API 호출
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -37,10 +40,12 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
+        
+        // 5. 프론트엔드로 결과 돌려주기
         res.status(200).json(data);
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Gemini API 호출 중 에러 발생' });
+        console.error("Gemini API 에러:", error);
+        res.status(500).json({ error: 'Gemini 서버와 통신 중 문제가 발생했습니다.' });
     }
 }
