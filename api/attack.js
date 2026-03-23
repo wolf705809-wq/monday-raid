@@ -11,7 +11,8 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        // 🌟 변경된 부분: 모델 이름을 gemini-1.5-flash-latest 로 변경했습니다!
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -27,12 +28,13 @@ module.exports = async function handler(req, res) {
 
         const data = await response.json();
 
+        // 구글에서 에러를 뱉었을 경우
         if (data.error) {
             console.error("Gemini 에러:", data.error);
             return res.status(500).json({ error: 'Gemini 통신 에러' });
         }
 
-        // 🌟 여기가 핵심: AI가 잡담을 섞어 보내도 정규식으로 '{ }' 안의 JSON만 쏙 빼냅니다!
+        // AI가 잡담을 섞어 보내도 정규식으로 '{ }' 안의 JSON만 쏙 빼냅니다!
         let text = data.candidates[0].content.parts[0].text;
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         
@@ -43,7 +45,7 @@ module.exports = async function handler(req, res) {
         // 파싱된 깔끔한 데이터 객체
         const parsedData = JSON.parse(jsonMatch[0]);
 
-        // 프론트엔드로는 에러 안 나는 깨끗한 객체만 딱 전송
+        // 프론트엔드로는 깨끗한 객체만 딱 전송
         res.status(200).json(parsedData);
 
     } catch (error) {
