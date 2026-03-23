@@ -1,7 +1,4 @@
-// api/attack.js 수정본 (가장 안전한 형태)
-// 파일 위치: api/attack.js
-
-module.exports = async function handler(req, res) {
+module.exports = async function(req, res) {
     // 1. POST 요청만 받음
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'POST 요청만 허용됩니다.' });
@@ -18,7 +15,7 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        // 4. Gemini API 호출
+        // 4. Gemini API 호출 (여기에 await이 있기 때문에, 맨 위 함수에 async가 꼭 있어야 합니다)
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -50,25 +47,3 @@ module.exports = async function handler(req, res) {
         res.status(500).json({ error: 'Gemini 서버와 통신 중 문제가 발생했습니다.' });
     }
 };
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: `다음 게임 스킬을 평가해서 JSON으로 답해: ${skillName}. 형식: {"damage": 숫자, "critical": 불리언, "description": "설명"}` }] }]
-            })
-        });
-
-        const data = await response.json();
-        
-        // 만약 구글 API에서 에러를 뱉었다면?
-        if (data.error) {
-            return res.status(data.error.code || 500).json(data.error);
-        }
-
-        return res.status(200).json(data);
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-}
