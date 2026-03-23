@@ -3,62 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대환장 보스 레이드</title>
+    <title>🎀 대환장 보스 레이드</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #1a1a2e; color: #fff; font-family: 'Noto Sans KR', sans-serif; overflow: hidden; }
-        .title-font { font-family: 'Black Han Sans', sans-serif; }
+        body { background-color: #FFF0F5; color: #5D4037; font-family: 'Jua', sans-serif; overflow: hidden; }
         
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            10%, 30%, 50%, 70%, 90% { transform: translate(-3px, -2px) rotate(-1deg); }
-            20%, 40%, 60%, 80% { transform: translate(3px, 2px) rotate(1deg); }
+        /* 통통 튀는 보스 애니메이션 */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
-        .shake { animation: shake 0.5s 1; filter: drop-shadow(0 0 20px red); }
+        .boss-idle { animation: bounce 2s infinite ease-in-out; }
+        
+        /* 피격 시 애니메이션 */
+        @keyframes hit {
+            0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
+            50% { transform: scale(0.8) rotate(-10deg); filter: hue-rotate(90deg) drop-shadow(0 0 20px #ff99cc); }
+            100% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
+        }
+        .hit { animation: hit 0.4s ease-out; }
 
+        /* 귀여운 데미지 팝업 */
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            50% { transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1); }
         }
         .damage-popup {
-            position: absolute; color: #ff3333; font-size: 3rem; font-weight: 900;
-            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            position: absolute; color: #FF6B6B; font-size: 3.5rem; text-shadow: 2px 2px 0 #fff;
             pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 50;
         }
 
-        #hp-fill { transition: width 0.3s ease-out; }
-        .battle-log::-webkit-scrollbar { width: 6px; }
-        .battle-log::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 4px; }
+        #hp-fill { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bubble { background: #fff; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(255, 182, 193, 0.2); }
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #FFB6C1; border-radius: 10px; }
     </style>
 </head>
 <body class="h-screen flex flex-col items-center justify-center p-4">
 
     <div id="damage-container" class="fixed inset-0 pointer-events-none flex justify-center items-center"></div>
 
-    <div class="w-full max-w-3xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 overflow-hidden flex flex-col h-[90vh]">
-        <div class="relative p-8 flex flex-col items-center justify-center bg-gradient-to-b from-red-900/40 to-gray-900 h-2/5 border-b border-gray-700">
-            <h1 class="title-font text-5xl text-red-500 mb-2 drop-shadow-lg" id="boss-sprite">👹 월요일의 악마</h1>
-            <p class="text-gray-400 text-sm mb-6">"주말은 끝났다. 영원한 출근뿐이다..."</p>
+    <div class="w-full max-w-3xl bg-white/80 backdrop-blur-sm rounded-[3rem] shadow-xl border-4 border-pink-200 overflow-hidden flex flex-col h-[90vh]">
+        
+        <div class="relative p-8 flex flex-col items-center justify-center bg-pink-50 h-2/5 border-b-4 border-pink-100">
+            <h1 class="text-6xl mb-4 drop-shadow-md boss-idle" id="boss-sprite">👿 월요일의 꼬마 악마</h1>
+            <p class="text-pink-400 text-lg mb-6">"출근해라 닝겐... 히히..."</p>
             
-            <div class="w-full max-w-md bg-gray-800 rounded-full h-6 border-2 border-gray-950 relative overflow-hidden">
-                <div id="hp-fill" class="bg-gradient-to-r from-red-600 to-red-400 h-full w-full"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white text-shadow">
+            <div class="w-full max-w-md bg-white rounded-full h-8 border-4 border-pink-200 relative overflow-hidden shadow-inner">
+                <div id="hp-fill" class="bg-gradient-to-r from-pink-400 to-rose-300 h-full w-full"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-sm text-white drop-shadow-md">
                     <span id="hp-text">9999 / 9999</span>
                 </div>
             </div>
         </div>
 
-        <div id="log-container" class="flex-1 p-6 overflow-y-auto battle-log bg-gray-950/50 flex flex-col gap-4">
-            <div class="text-center text-gray-500 text-sm">전투가 시작되었습니다. 세상에서 가장 어이없는 스킬을 입력해 공격하세요!</div>
+        <div id="log-container" class="flex-1 p-6 overflow-y-auto custom-scroll bg-gradient-to-b from-white to-pink-50 flex flex-col">
+            <div class="text-center text-pink-300 text-sm mb-4">전투 시작! 뽀짝하고 어이없는 스킬로 공격해보세요 🐾</div>
         </div>
 
-        <div class="p-4 bg-gray-800 flex gap-3 items-center">
-            <input type="text" id="skill-input" placeholder="예: 야근하는 김대리의 분노 찬 샷건치기" 
-                   class="flex-1 bg-gray-900 text-white px-4 py-3 rounded-xl border border-gray-600 focus:outline-none focus:border-blue-500 transition-colors text-lg"
+        <div class="p-6 bg-white flex gap-3 items-center border-t-4 border-pink-100">
+            <input type="text" id="skill-input" placeholder="예: 앞구르기 하면서 사직서 던지기!" 
+                   class="flex-1 bg-pink-50 text-pink-900 px-6 py-4 rounded-full border-2 border-pink-200 focus:outline-none focus:border-pink-400 transition-colors text-xl"
                    onkeypress="if(event.key === 'Enter') castSkill()">
-            <button id="attack-btn" onclick="castSkill()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-transform transform active:scale-95 disabled:opacity-50">
-                스킬 시전!
+            <button id="attack-btn" onclick="castSkill()" class="bg-pink-400 hover:bg-pink-500 text-white py-4 px-8 rounded-full shadow-lg shadow-pink-200 transition-transform transform active:scale-95 disabled:opacity-50 text-xl">
+                얍! 공격! 🐾
             </button>
         </div>
     </div>
@@ -76,39 +86,32 @@
 
             inputEl.disabled = true;
             btnEl.disabled = true;
-            btnEl.innerText = "영창 중...";
+            btnEl.innerText = "마법 모으는 중 몽글몽글...";
             
-            addLog(`<span class="text-blue-400 font-bold">[플레이어]</span> "${skillName}" (을)를 준비합니다...`);
+            addLog(`<div class="text-pink-500">✨ [플레이어] "${skillName}" (을)를 준비합니다!</div>`);
 
             try {
-                // 백엔드 API 호출
+                // 프론트엔드는 이제 복잡한 파싱 없이 백엔드가 주는 깔끔한 JSON만 받습니다.
                 const response = await fetch(`/api/attack`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ skillName: skillName })
                 });
 
-                if (!response.ok) {
-                    throw new Error("서버 응답 오류");
-                }
-
-                const data = await response.json();
+                if (!response.ok) throw new Error("서버 에러");
                 
-                // Gemini 응답 텍스트를 JSON으로 파싱
-                let resultText = data.candidates[0].content.parts[0].text;
-                resultText = resultText.replace(/```json/g, "").replace(/```/g, "").trim(); 
-                const result = JSON.parse(resultText);
-                
+                // 백엔드가 이미 깨끗하게 파싱한 데이터를 돌려줍니다.
+                const result = await response.json(); 
                 applyDamage(result.damage, result.critical, result.description, skillName);
 
             } catch (error) {
                 console.error(error);
-                addLog(`<span class="text-red-500">스킬 시전 실패! 마나가 꼬였습니다. (서버/API 에러)</span>`);
+                addLog(`<div class="text-red-400 font-bold">앗! 마법진이 꼬였어요! 다시 시도해 주세요. 💦</div>`);
             } finally {
                 inputEl.value = '';
                 inputEl.disabled = false;
                 btnEl.disabled = false;
-                btnEl.innerText = "스킬 시전!";
+                btnEl.innerText = "얍! 공격! 🐾";
                 inputEl.focus();
             }
         }
@@ -118,9 +121,10 @@
             currentHp = Math.max(0, currentHp - finalDmg);
             
             const bossEl = document.getElementById('boss-sprite');
-            bossEl.classList.remove('shake');
+            bossEl.classList.remove('boss-idle', 'hit');
             void bossEl.offsetWidth; 
-            bossEl.classList.add('shake');
+            bossEl.classList.add('hit');
+            setTimeout(() => bossEl.classList.add('boss-idle'), 400);
 
             const hpPercent = (currentHp / maxHp) * 100;
             document.getElementById('hp-fill').style.width = `${hpPercent}%`;
@@ -129,22 +133,22 @@
             const popupArea = document.getElementById('damage-container');
             const popup = document.createElement('div');
             popup.className = 'damage-popup';
-            popup.innerText = isCrit ? `💥 CRITICAL! -${finalDmg}` : `-${finalDmg}`;
-            if(isCrit) popup.style.color = '#ffaa00';
+            popup.innerText = isCrit ? `💥 앗따가! -${finalDmg}` : `-${finalDmg}`;
+            if(isCrit) popup.style.color = '#FFA07A';
             popupArea.appendChild(popup);
             setTimeout(() => popup.remove(), 1000);
 
-            const critText = isCrit ? `<span class="text-yellow-400 font-bold">[크리티컬!]</span>` : '';
+            const critText = isCrit ? `<span class="text-orange-400 font-bold ml-2">(치명타! 🌟)</span>` : '';
             addLog(`
-                <div class="bg-gray-800 p-4 rounded-lg border-l-4 border-blue-500 shadow mt-2">
-                    <div class="text-lg mb-1"><span class="text-blue-300 font-bold">${skillName}</span> 적중! ${critText} <span class="text-red-400 font-bold">(-${finalDmg})</span></div>
-                    <div class="text-gray-300 italic text-sm">"${desc}"</div>
+                <div class="bubble border-l-4 border-pink-400">
+                    <div class="text-xl mb-1 text-gray-700">🪄 <span class="text-pink-600 font-bold">${skillName}</span> 명중! ${critText} <span class="text-red-400">(-${finalDmg})</span></div>
+                    <div class="text-gray-500 text-lg mt-2 bg-pink-50 p-3 rounded-xl">"${desc}"</div>
                 </div>
             `);
 
             if (currentHp === 0) {
                 setTimeout(() => {
-                    addLog(`<div class="text-2xl font-bold text-yellow-400 text-center mt-4 border-y border-yellow-400 py-4">🎉 월요일의 악마가 처치되었습니다! 영원한 주말이 찾아옵니다! 🎉</div>`);
+                    addLog(`<div class="bubble bg-yellow-100 text-center text-2xl text-yellow-600 font-bold py-6 mt-4">🎉 꼬마 악마가 퇴근했습니다! 주말이 찾아옵니다! 🎉</div>`);
                     document.getElementById('attack-btn').disabled = true;
                     document.getElementById('skill-input').disabled = true;
                 }, 500);
