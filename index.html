@@ -3,72 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎀 대환장 보스 레이드</title>
+    <title>🍞 배고픈 뚱냥이 달래기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #FFF0F5; color: #5D4037; font-family: 'Jua', sans-serif; overflow: hidden; }
+        body { background-color: #FFF8DC; color: #8B4513; font-family: 'Jua', sans-serif; overflow: hidden; }
         
-        /* 통통 튀는 보스 애니메이션 */
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
+        /* 뚱냥이 꼬르륵 애니메이션 */
+        @keyframes hungry {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-        .boss-idle { animation: bounce 2s infinite ease-in-out; }
+        .cat-idle { animation: hungry 2s infinite ease-in-out; }
         
-        /* 피격 시 애니메이션 */
-        @keyframes hit {
-            0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
-            50% { transform: scale(0.8) rotate(-10deg); filter: hue-rotate(90deg) drop-shadow(0 0 20px #ff99cc); }
-            100% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
+        /* 먹방 달성 애니메이션 */
+        @keyframes eat {
+            0% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.1) translateY(-20px); filter: drop-shadow(0 0 20px #FFD700); }
+            100% { transform: scale(1) translateY(0); }
         }
-        .hit { animation: hit 0.4s ease-out; }
+        .eat { animation: eat 0.5s ease-out; }
 
-        /* 귀여운 데미지 팝업 */
+        /* 하트 팝업 */
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(0.8); }
             50% { transform: translateY(-30px) scale(1.2); }
             100% { opacity: 0; transform: translateY(-60px) scale(1); }
         }
-        .damage-popup {
-            position: absolute; color: #FF6B6B; font-size: 3.5rem; text-shadow: 2px 2px 0 #fff;
+        .heart-popup {
+            position: absolute; color: #FF6347; font-size: 3.5rem; text-shadow: 2px 2px 0 #fff;
             pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 50;
         }
 
         #hp-fill { transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bubble { background: #fff; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(255, 182, 193, 0.2); }
+        .bubble { background: #fff; border-radius: 20px; padding: 12px 16px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(255, 165, 0, 0.15); }
         .custom-scroll::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #FFB6C1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #FFDAB9; border-radius: 10px; }
     </style>
 </head>
 <body class="h-screen flex flex-col items-center justify-center p-4">
 
     <div id="damage-container" class="fixed inset-0 pointer-events-none flex justify-center items-center"></div>
 
-    <div class="w-full max-w-3xl bg-white/80 backdrop-blur-sm rounded-[3rem] shadow-xl border-4 border-pink-200 overflow-hidden flex flex-col h-[90vh]">
+    <div class="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-[3rem] shadow-xl border-4 border-orange-200 overflow-hidden flex flex-col h-[90vh]">
         
-        <div class="relative p-8 flex flex-col items-center justify-center bg-pink-50 h-2/5 border-b-4 border-pink-100">
-            <h1 class="text-6xl mb-4 drop-shadow-md boss-idle" id="boss-sprite">👿 월요일의 꼬마 악마</h1>
-            <p class="text-pink-400 text-lg mb-6">"출근해라 닝겐... 히히..."</p>
+        <div class="relative p-8 flex flex-col items-center justify-center bg-orange-50 h-2/5 border-b-4 border-orange-100">
+            <h1 class="text-7xl mb-4 drop-shadow-md cat-idle" id="boss-sprite">😾</h1>
+            <h2 class="text-3xl text-orange-600 mb-2">잔뜩 화난 배고픈 뚱냥이</h2>
+            <p class="text-orange-400 text-lg mb-6">"밥 내놔라 냥... 꼬르륵..."</p>
             
-            <div class="w-full max-w-md bg-white rounded-full h-8 border-4 border-pink-200 relative overflow-hidden shadow-inner">
-                <div id="hp-fill" class="bg-gradient-to-r from-pink-400 to-rose-300 h-full w-full"></div>
-                <div class="absolute inset-0 flex items-center justify-center text-sm text-white drop-shadow-md">
+            <div class="w-full max-w-md bg-white rounded-full h-8 border-4 border-orange-200 relative overflow-hidden shadow-inner flex items-center">
+                <div class="absolute left-3 z-10 text-sm text-orange-800 font-bold">배고픔 수치</div>
+                <div id="hp-fill" class="bg-gradient-to-r from-red-400 to-orange-400 h-full w-full absolute right-0"></div>
+                <div class="absolute inset-0 flex items-center justify-end pr-4 text-sm text-white drop-shadow-md z-10">
                     <span id="hp-text">9999 / 9999</span>
                 </div>
             </div>
         </div>
 
-        <div id="log-container" class="flex-1 p-6 overflow-y-auto custom-scroll bg-gradient-to-b from-white to-pink-50 flex flex-col">
-            <div class="text-center text-pink-300 text-sm mb-4">전투 시작! 뽀짝하고 어이없는 스킬로 공격해보세요 🐾</div>
+        <div id="log-container" class="flex-1 p-6 overflow-y-auto custom-scroll bg-gradient-to-b from-white to-orange-50 flex flex-col">
+            <div class="text-center text-orange-300 text-sm mb-4">맛있는 요리나 간식으로 뚱냥이의 화를 달래주세요! 🐾</div>
         </div>
 
-        <div class="p-6 bg-white flex gap-3 items-center border-t-4 border-pink-100">
-            <input type="text" id="skill-input" placeholder="예: 앞구르기 하면서 사직서 던지기!" 
-                   class="flex-1 bg-pink-50 text-pink-900 px-6 py-4 rounded-full border-2 border-pink-200 focus:outline-none focus:border-pink-400 transition-colors text-xl"
+        <div class="p-6 bg-white flex gap-3 items-center border-t-4 border-orange-100">
+            <input type="text" id="skill-input" placeholder="예: 버터 풍미 가득한 스크램블 에그!" 
+                   class="flex-1 bg-orange-50 text-orange-900 px-6 py-4 rounded-full border-2 border-orange-200 focus:outline-none focus:border-orange-400 transition-colors text-xl"
                    onkeypress="if(event.key === 'Enter') castSkill()">
-            <button id="attack-btn" onclick="castSkill()" class="bg-pink-400 hover:bg-pink-500 text-white py-4 px-8 rounded-full shadow-lg shadow-pink-200 transition-transform transform active:scale-95 disabled:opacity-50 text-xl">
-                얍! 공격! 🐾
+            <button id="attack-btn" onclick="castSkill()" class="bg-orange-400 hover:bg-orange-500 text-white py-4 px-8 rounded-full shadow-lg shadow-orange-200 transition-transform transform active:scale-95 disabled:opacity-50 text-xl">
+                먹여주기! 🍽️
             </button>
         </div>
     </div>
@@ -86,12 +88,11 @@
 
             inputEl.disabled = true;
             btnEl.disabled = true;
-            btnEl.innerText = "마법 모으는 중 몽글몽글...";
+            btnEl.innerText = "요리하는 중 칙칙폭폭...";
             
-            addLog(`<div class="text-pink-500">✨ [플레이어] "${skillName}" (을)를 준비합니다!</div>`);
+            addLog(`<div class="text-orange-500">🧑‍🍳 [집사] "${skillName}" (을)를 준비합니다!</div>`);
 
             try {
-                // 프론트엔드는 이제 복잡한 파싱 없이 백엔드가 주는 깔끔한 JSON만 받습니다.
                 const response = await fetch(`/api/attack`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -100,18 +101,17 @@
 
                 if (!response.ok) throw new Error("서버 에러");
                 
-                // 백엔드가 이미 깨끗하게 파싱한 데이터를 돌려줍니다.
                 const result = await response.json(); 
                 applyDamage(result.damage, result.critical, result.description, skillName);
 
             } catch (error) {
                 console.error(error);
-                addLog(`<div class="text-red-400 font-bold">앗! 마법진이 꼬였어요! 다시 시도해 주세요. 💦</div>`);
+                addLog(`<div class="text-red-400 font-bold">앗! 요리를 태웠어요! 다시 시도해 주세요. 🔥</div>`);
             } finally {
                 inputEl.value = '';
                 inputEl.disabled = false;
                 btnEl.disabled = false;
-                btnEl.innerText = "얍! 공격! 🐾";
+                btnEl.innerText = "먹여주기! 🍽️";
                 inputEl.focus();
             }
         }
@@ -121,34 +121,38 @@
             currentHp = Math.max(0, currentHp - finalDmg);
             
             const bossEl = document.getElementById('boss-sprite');
-            bossEl.classList.remove('boss-idle', 'hit');
+            bossEl.classList.remove('cat-idle', 'eat');
             void bossEl.offsetWidth; 
-            bossEl.classList.add('hit');
-            setTimeout(() => bossEl.classList.add('boss-idle'), 400);
+            bossEl.classList.add('eat');
+            setTimeout(() => bossEl.classList.add('cat-idle'), 500);
 
+            // 포만감이 찰수록 (hp가 줄어들수록) 고양이 표정이 바뀜
+            if (currentHp < maxHp * 0.5 && currentHp > 0) bossEl.innerText = '😸';
+            
             const hpPercent = (currentHp / maxHp) * 100;
             document.getElementById('hp-fill').style.width = `${hpPercent}%`;
             document.getElementById('hp-text').innerText = `${currentHp} / ${maxHp}`;
 
             const popupArea = document.getElementById('damage-container');
             const popup = document.createElement('div');
-            popup.className = 'damage-popup';
-            popup.innerText = isCrit ? `💥 앗따가! -${finalDmg}` : `-${finalDmg}`;
-            if(isCrit) popup.style.color = '#FFA07A';
+            popup.className = 'heart-popup';
+            popup.innerText = isCrit ? `💖 완전 맛있다냥! -${finalDmg}` : `💕 냠냠! -${finalDmg}`;
             popupArea.appendChild(popup);
             setTimeout(() => popup.remove(), 1000);
 
-            const critText = isCrit ? `<span class="text-orange-400 font-bold ml-2">(치명타! 🌟)</span>` : '';
+            const critText = isCrit ? `<span class="text-red-500 font-bold ml-2">(입맛 저격! 츄르급 감동! 🌟)</span>` : '';
             addLog(`
-                <div class="bubble border-l-4 border-pink-400">
-                    <div class="text-xl mb-1 text-gray-700">🪄 <span class="text-pink-600 font-bold">${skillName}</span> 명중! ${critText} <span class="text-red-400">(-${finalDmg})</span></div>
-                    <div class="text-gray-500 text-lg mt-2 bg-pink-50 p-3 rounded-xl">"${desc}"</div>
+                <div class="bubble border-l-4 border-orange-400">
+                    <div class="text-xl mb-1 text-gray-700">🍖 <span class="text-orange-600 font-bold">${skillName}</span> 대접 완료! ${critText} <span class="text-green-500 font-bold">(배고픔 -${finalDmg})</span></div>
+                    <div class="text-gray-500 text-lg mt-2 bg-orange-50 p-3 rounded-xl">"${desc}"</div>
                 </div>
             `);
 
             if (currentHp === 0) {
+                bossEl.innerText = '😻💤';
+                bossEl.classList.remove('cat-idle');
                 setTimeout(() => {
-                    addLog(`<div class="bubble bg-yellow-100 text-center text-2xl text-yellow-600 font-bold py-6 mt-4">🎉 꼬마 악마가 퇴근했습니다! 주말이 찾아옵니다! 🎉</div>`);
+                    addLog(`<div class="bubble bg-green-100 text-center text-2xl text-green-700 font-bold py-6 mt-4">🎉 뚱냥이가 식곤증으로 잠들었습니다! 집사의 완벽한 승리! 🎉</div>`);
                     document.getElementById('attack-btn').disabled = true;
                     document.getElementById('skill-input').disabled = true;
                 }, 500);
